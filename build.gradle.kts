@@ -1,5 +1,5 @@
 plugins {
-    kotlin("jvm") version "2.4.0"
+    kotlin("jvm") version "1.9.23"
 }
 
 group = "com.prosoft"
