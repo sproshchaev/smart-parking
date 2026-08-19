@@ -6,17 +6,18 @@ abstract class Vehicle(val plate: String) {
     open fun describe(): String = "ТС $plate"
 }
 
+// Авто - стандартное место
 class Car(plate: String) : Vehicle(plate) {
     override val sizeFactor = 1.0
 }
 
-// Truck
+// Truck - грузовое место
 class Truck(plate: String, val axles: Int): Vehicle(plate) {
     override val sizeFactor = 2.5
     override fun describe() = super.describe() + ", грузовик на $axles осях"
 }
 
-// Moto
+// Moto - компакт место
 class Motorcycle(plate: String): Vehicle(plate) {
     override val sizeFactor = 0.5
     override fun describe() = "Мотоцикл $plate"

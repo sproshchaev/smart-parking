@@ -23,3 +23,4 @@ fun main() {
     println("К оплате: ${fee(minutes = 95)} руб.")
 }
 
+
