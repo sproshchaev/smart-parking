@@ -5,22 +5,39 @@ import com.prosoft.parking.tariff.fee
 
 fun main() {
 
-    val vehicle: List<Vehicle> = listOf(
-        Car("А123ВС77"),
-        Motorcycle("Е789КМ50"),
-        Truck("В456ЕК99", axles = 3), // висячая запятая разрешена
-    )
 
-    vehicle.forEach {
-        println(it.describe() + ", коэффициент ${it.sizeFactor}")
+
+    val car = Car("A123BC77")
+    val spot = Spot("L1-01", level = 1, SpotType.COMPACT)
+    val session = Session.start(car, spot, now = 1_700_000_000_000)
+
+    println(session) // Session(plate=A123BC77, spotId=L1-01, startedAt=1700000000000)
+
+    val (plate, spotId, startAt) = session // деструктуризация
+
+    println("Номер $plate, место $spotId, старт $startAt")
+
+    println(session == session.copy())
+
+    println(session.copy(spotId = "L2-07"))
+
+    listOf(
+        ParkResult.Ok(session),
+        ParkResult.NoSpace,
+        ParkResult.UnknownPlate(" ??? "),
+    ).forEach { result ->
+        val message = when (result) {
+            is ParkResult.Ok -> "Место ${result.session.spotId} ваше"
+            is ParkResult.UnknownPlate -> "Не читаю номер: ${result.raw}"
+            ParkResult.NoSpace -> "Свободных мест нет!"
+        }
+        println(message)
     }
 
-    val spot = Spot("L1-01", level = 1)
-    println("Место ${spot.id} свободно: ${spot.isFree}")
-    spot.occupy(vehicle[0])
-    print("Место ${spot.id} занято ${spot.occupiedBy?.plate}")
+    SpotType.entries.forEach {
+        println("${it.name}: ${it.title}, до ${it.maxSizeFactor}")
+    }
 
-    println("К оплате: ${fee(minutes = 95)} руб.")
 }
 
 
