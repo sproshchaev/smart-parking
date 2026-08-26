@@ -3,40 +3,43 @@ package com.prosoft.parking
 import com.prosoft.parking.model.*
 import com.prosoft.parking.tariff.fee
 
+fun buildSpots(): List<Spot> = buildList {
+    repeat(4) { add(Spot("L1-0${it + 1}", 1, SpotType.COMPACT)) }
+    repeat(3) { add(Spot("L2-0${it + 1}", 3, SpotType.STANDARD)) }
+    repeat(2) { add(Spot("L3-0${it + 1}", 3, SpotType.TRUCK)) }
+}
+
 fun main() {
 
+    val parking = Parking(buildSpots())
+    val start = 1_700_000_000_000
 
+    listOf(Car("A123BC77"), Motorcycle("E789KM50"), Truck("B456EK99", 3))
+        .forEach { vehicle ->
+            when (val result = parking.enter(vehicle, start)) { // объявление переменной в заголовке
+                is ParkResult.Ok -> println("${vehicle.plate} -> место ${result.session.spotId}")
+                is ParkResult.UnknownPlate -> println("Номер не распознан: ${result.raw}")
+                is ParkResult.NoSpace -> println("${vehicle.plate} -> мест нет")
+            }
 
-    val car = Car("A123BC77")
-    val spot = Spot("L1-01", level = 1, SpotType.COMPACT)
-    val session = Session.start(car, spot, now = 1_700_000_000_000)
-
-    println(session) // Session(plate=A123BC77, spotId=L1-01, startedAt=1700000000000)
-
-    val (plate, spotId, startAt) = session // деструктуризация
-
-    println("Номер $plate, место $spotId, старт $startAt")
-
-    println(session == session.copy())
-
-    println(session.copy(spotId = "L2-07"))
-
-    listOf(
-        ParkResult.Ok(session),
-        ParkResult.NoSpace,
-        ParkResult.UnknownPlate(" ??? "),
-    ).forEach { result ->
-        val message = when (result) {
-            is ParkResult.Ok -> "Место ${result.session.spotId} ваше"
-            is ParkResult.UnknownPlate -> "Не читаю номер: ${result.raw}"
-            ParkResult.NoSpace -> "Свободных мест нет!"
         }
-        println(message)
+
+    // Сводка по уровням и выезд с расчетом
+    println("Занятость: ${parking.occupancy()}%")
+
+    parking.byLevel().forEach { (level, spots) ->
+        println("Уровень $level: свободно ${spots.count { it.isFree }} из ${spots.size}")
     }
 
-    SpotType.entries.forEach {
-        println("${it.name}: ${it.title}, до ${it.maxSizeFactor}")
-    }
+    println("Свободных компактных: ${parking.freeSpots(SpotType.COMPACT).map { it.id }}")
+
+    println("Активные сессии: ${parking.activeSessions().map { it.plate }}")
+
+    val (session, minutes) = parking.exit("A123BC77", start + 95 * 60_000)!! // TODO антипаттерн !!
+
+    println("Выезд ${session.plate}: $minutes мин, к оплате ${fee(minutes)} руб.")
+
+    println("Занятость после выезда: ${parking.occupancy()}%")
 
 }
 
