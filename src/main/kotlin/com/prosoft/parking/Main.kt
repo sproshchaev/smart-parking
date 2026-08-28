@@ -1,7 +1,12 @@
 package com.prosoft.parking
 
 import com.prosoft.parking.model.*
+import com.prosoft.parking.tariff.Cashier
+import com.prosoft.parking.tariff.Tariff
 import com.prosoft.parking.tariff.fee
+import com.prosoft.parking.tariff.flat
+import com.prosoft.parking.tariff.night
+import com.prosoft.parking.tariff.withPromo
 
 fun buildSpots(): List<Spot> = buildList {
     repeat(4) { add(Spot("L1-0${it + 1}", 1, SpotType.COMPACT)) }
@@ -14,32 +19,38 @@ fun main() {
     val parking = Parking(buildSpots())
     val start = 1_700_000_000_000
 
-    listOf(Car("A123BC77"), Motorcycle("E789KM50"), Truck("B456EK99", 3))
-        .forEach { vehicle ->
-            when (val result = parking.enter(vehicle, start)) { // объявление переменной в заголовке
-                is ParkResult.Ok -> println("${vehicle.plate} -> место ${result.session.spotId}")
-                is ParkResult.UnknownPlate -> println("Номер не распознан: ${result.raw}")
-                is ParkResult.NoSpace -> println("${vehicle.plate} -> мест нет")
-            }
+    val tariffs: Map<String, Tariff> = mapOf(
+        "дневной" to flat,
+        "ночной" to night,
+        "промо -20%" to withPromo(flat, persent = 20),
+        )
 
-        }
-
-    // Сводка по уровням и выезд с расчетом
-    println("Занятость: ${parking.occupancy()}%")
-
-    parking.byLevel().forEach { (level, spots) ->
-        println("Уровень $level: свободно ${spots.count { it.isFree }} из ${spots.size}")
+    tariffs.forEach { (name, tariff) ->
+        println("$name: 95 мин -> ${Cashier(tariff).charge(95)} руб.")
     }
 
-    println("Свободных компактных: ${parking.freeSpots(SpotType.COMPACT).map { it.id }}")
+    val result = parking.enter(Car("A123BC77"), start)
 
-    println("Активные сессии: ${parking.activeSessions().map { it.plate }}")
+    val session  = when (result) {
+        is ParkResult.Ok -> result.session.also {
+            println("LOG: создана сессия $it")
+        }
+        is ParkResult.UnknownPlate -> error("номер не распознан")
+        is ParkResult.AlreadyInside -> error("авто внутри")
+        ParkResult.NoSpace -> error("мест нет")
+    }
 
-    val (session, minutes) = parking.exit("A123BC77", start + 95 * 60_000)!! // TODO антипаттерн !!
+    val report = StringBuilder().apply {
+        appendLine("Отчет:")
+        appendLine("  Мест всего: ${parking.total}")
+        appendLine("  Занятость: ${parking.occupancy()}%")
+        appendLine("  Сессия: ${session.plate} на ${session.spotId}")
+    }.toString()
+    print(report)
 
-    println("Выезд ${session.plate}: $minutes мин, к оплате ${fee(minutes)} руб.")
+    val plates = parking.activeSessions().map(Session::plate)
 
-    println("Занятость после выезда: ${parking.occupancy()}%")
+    println("Внутри: $plates")
 
 }
 

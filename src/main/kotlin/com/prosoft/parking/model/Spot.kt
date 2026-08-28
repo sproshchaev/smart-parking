@@ -16,6 +16,7 @@ class Spot(val id: String, val level: Int, val type: SpotType) {
     fun fits(vehicle: Vehicle): Boolean = vehicle.sizeFactor <= type.maxSizeFactor
 
     fun occupy(vehicle: Vehicle) {
+        if (!isFree) throw SpotOccupiedException(id)
         occupiedBy = vehicle
     }
 
