@@ -1,56 +1,50 @@
 package com.prosoft.parking
 
-import com.prosoft.parking.model.*
-import com.prosoft.parking.tariff.Cashier
-import com.prosoft.parking.tariff.Tariff
+import com.prosoft.parking.model.Car
+import com.prosoft.parking.model.Spot
+import com.prosoft.parking.model.SpotType
+import com.prosoft.parking.storage.SessionLog
 import com.prosoft.parking.tariff.fee
-import com.prosoft.parking.tariff.flat
-import com.prosoft.parking.tariff.night
-import com.prosoft.parking.tariff.withPromo
+import kotlin.io.path.Path
+import kotlin.io.path.readText
 
 fun buildSpots(): List<Spot> = buildList {
-    repeat(4) { add(Spot("L1-0${it + 1}", 1, SpotType.COMPACT)) }
-    repeat(3) { add(Spot("L2-0${it + 1}", 3, SpotType.STANDARD)) }
-    repeat(2) { add(Spot("L3-0${it + 1}", 3, SpotType.TRUCK)) }
+    repeat(2) { add(Spot("L1-0${it + 1}", 1, SpotType.COMPACT)) }
+    add(Spot("L3-01", 3, SpotType.TRUCK))
 }
+
 
 fun main() {
 
     val parking = Parking(buildSpots())
+
+    val log = SessionLog(Path("build/demo/sessions.csv"))
+    log.clear()
+
     val start = 1_700_000_000_000
 
-    val tariffs: Map<String, Tariff> = mapOf(
-        "дневной" to flat,
-        "ночной" to night,
-        "промо -20%" to withPromo(flat, persent = 20),
-        )
+    val plan = listOf(
+        "A123BC77" to 95, "B456EK99" to 20,
+        "E789KM50" to 400, "A123BC77" to 60
+    )
 
-    tariffs.forEach { (name, tariff) ->
-        println("$name: 95 мин -> ${Cashier(tariff).charge(95)} руб.")
-    }
-
-    val result = parking.enter(Car("A123BC77"), start)
-
-    val session  = when (result) {
-        is ParkResult.Ok -> result.session.also {
-            println("LOG: создана сессия $it")
+    plan.forEach { (plate, minutes) ->
+        parking.enterChecked(Car(plate), start).onSuccess {
+            val (session, actual) = parking.exit(
+                plate, start + minutes * 60_000L
+            )
+            val amount = fee(actual)
+            log.append(session, actual, amount)
+            println("$plate: $actual мин -> $amount руб.")
         }
-        is ParkResult.UnknownPlate -> error("номер не распознан")
-        is ParkResult.AlreadyInside -> error("авто внутри")
-        ParkResult.NoSpace -> error("мест нет")
+
     }
 
-    val report = StringBuilder().apply {
-        appendLine("Отчет:")
-        appendLine("  Мест всего: ${parking.total}")
-        appendLine("  Занятость: ${parking.occupancy()}%")
-        appendLine("  Сессия: ${session.plate} на ${session.spotId}")
-    }.toString()
-    print(report)
-
-    val plates = parking.activeSessions().map(Session::plate)
-
-    println("Внутри: $plates")
+    println("--- файл на диске ---")
+    print(Path("build/demo/sessions.csv").readText())
+    println("--- итоги ---")
+    println("Выручка: ${log.revenue()} руб.")
+    println("Топ клиентов: ${log.topPlates(2)}")
 
 }
 
