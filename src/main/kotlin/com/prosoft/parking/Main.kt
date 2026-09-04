@@ -1,8 +1,11 @@
 package com.prosoft.parking
 
 import com.prosoft.parking.model.Car
+import com.prosoft.parking.model.ParkResult
 import com.prosoft.parking.model.Spot
 import com.prosoft.parking.model.SpotType
+import com.prosoft.parking.plate.platesInLog
+import com.prosoft.parking.plate.recognizePlate
 import com.prosoft.parking.storage.SessionLog
 import com.prosoft.parking.tariff.fee
 import kotlin.io.path.Path
@@ -16,35 +19,37 @@ fun buildSpots(): List<Spot> = buildList {
 
 fun main() {
 
-    val parking = Parking(buildSpots())
+    listOf(" а123вс77 ", "А123ВС77", "A123BC77", "А1234С77", "Х777ХХ199", null)
+        .forEach { raw ->
+            val plate = recognizePlate(raw)
+            println("'${raw ?: "null"}' -> ${plate ?: "не распознан"}")
+        }
 
-    val log = SessionLog(Path("build/demo/sessions.csv"))
-    log.clear()
+    println("--- разбор строки камеры ---")
+    val line = "12:04 IN А123ВС77 | 12:51 OUT А123ВС77 | 13:02 IN Х777ХХ99 | 13:05 IN ЩУКА"
+
+    platesInLog(line).forEach {
+        println("нашли ${it.value}, регион ${it.region}")
+    }
+
+    println("--- въезд по сырому номеру ---")
+    val parking = Parking(buildSpots())
 
     val start = 1_700_000_000_000
 
-    val plan = listOf(
-        "A123BC77" to 95, "B456EK99" to 20,
-        "E789KM50" to 400, "A123BC77" to 60
-    )
-
-    plan.forEach { (plate, minutes) ->
-        parking.enterChecked(Car(plate), start).onSuccess {
-            val (session, actual) = parking.exit(
-                plate, start + minutes * 60_000L
-            )
-            val amount = fee(actual)
-            log.append(session, actual, amount)
-            println("$plate: $actual мин -> $amount руб.")
+    listOf(" а123вс77 ", "мусор", "в456ек99").forEach {
+        raw ->
+        val result = parking.enterByPlate(raw, start) {
+            plate -> Car(plate)
         }
-
+        val message = when (result) {
+            is ParkResult.Ok -> "${result.session.plate} -> ${result.session.spotId}"
+            is ParkResult.AlreadyInside -> "${result.plate} уже внутри"
+            is ParkResult.UnknownPlate -> "шлагбаум закрыт, номер '${result.raw}' не читается"
+            ParkResult.NoSpace -> "мест нет"
+        }
+        println(message)
     }
-
-    println("--- файл на диске ---")
-    print(Path("build/demo/sessions.csv").readText())
-    println("--- итоги ---")
-    println("Выручка: ${log.revenue()} руб.")
-    println("Топ клиентов: ${log.topPlates(2)}")
 
 }
 

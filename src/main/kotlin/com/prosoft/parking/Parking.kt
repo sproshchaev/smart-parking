@@ -1,6 +1,7 @@
 package com.prosoft.parking
 
 import com.prosoft.parking.model.*
+import com.prosoft.parking.plate.recognizePlate
 
 class Parking(private val spots: List<Spot>) {
 
@@ -32,6 +33,12 @@ class Parking(private val spots: List<Spot>) {
         val session = Session.start(vehicle, spot, now)
         active[vehicle.plate] = session
         return ParkResult.Ok(session)
+    }
+
+    // въезд по сырому номеру
+    fun enterByPlate(raw: String?, now: Long, factory: (String) -> Vehicle): ParkResult {
+        val plate = recognizePlate(raw) ?: return ParkResult.UnknownPlate(raw)
+        return enter(factory(plate.value), now)
     }
 
     // Методы для отчетов: все 4 возвращают List и Map (только для чтения)
