@@ -20,7 +20,7 @@ class InMemoryRepository<T: Identifiable<ID>, ID> : Repository<T, ID> {
     private val store = LinkedHashMap<ID, T>()
 
     override fun save(item: T): T = item.also {
-        store[it.id]
+        store[it.id] = it
     }
 
     override fun findById(id: ID): T? = store[id]
