@@ -2,8 +2,11 @@ package com.prosoft.parking
 
 import com.prosoft.parking.model.*
 import com.prosoft.parking.plate.recognizePlate
+import com.prosoft.parking.repo.InMemoryRepository
+import com.prosoft.parking.repo.Repository
 
-class Parking(private val spots: List<Spot>) {
+class Parking(private val spots: List<Spot>,
+private val sessions: Repository<Session, String> = InMemoryRepository(), ) {
 
     private val active = mutableMapOf<String, Session>()
 
@@ -17,7 +20,8 @@ class Parking(private val spots: List<Spot>) {
         }
 
         // проверка повторного въезда
-        if (active.containsKey(vehicle.plate))
+        // if (active.containsKey(vehicle.plate))
+        if (sessions[vehicle.plate] != null)
             return ParkResult.AlreadyInside(vehicle.plate)
 
         val spot = spots
@@ -31,7 +35,8 @@ class Parking(private val spots: List<Spot>) {
 
         spot.occupy(vehicle)
         val session = Session.start(vehicle, spot, now)
-        active[vehicle.plate] = session
+        // active[vehicle.plate] = session
+        sessions.save(session)
         return ParkResult.Ok(session)
     }
 
@@ -52,7 +57,8 @@ class Parking(private val spots: List<Spot>) {
     fun occupancy(): Int = spots.count { !it.isFree } * 100 / spots.size
 
     // Сортировка по времени въезда
-    fun activeSessions(): List<Session> = active.values.sortedBy { it.startedAt }
+    // fun activeSessions(): List<Session> = active.values.sortedBy { it.startedAt }
+    fun activeSessions(): List<Session> = sessions.findAll().sortedBy { it.startedAt }
 
     // Обертка над въездом
     fun enterChecked(vehicle: Vehicle, now: Long): Result<Session> = runCatching {
@@ -67,7 +73,9 @@ class Parking(private val spots: List<Spot>) {
     // Выезд
     fun exit(plate: String, now: Long): Pair<Session, Int> {
                                                // Элвис (есть/null)
-        val session = active.remove(plate) ?: throw SessionNotFoundException(plate)
+        // val session = active.remove(plate) ?: throw SessionNotFoundException(plate)
+        val session = sessions.deleteById(plate) ?: throw SessionNotFoundException(plate)
+
         spots.first { it.id == session.spotId }.release()
         check(now >= session.startedAt) { "Время выезда раньше время въезда" }
         val minutes = ((now - session.startedAt) / 60_000).toInt() // 60_000 мс в мин

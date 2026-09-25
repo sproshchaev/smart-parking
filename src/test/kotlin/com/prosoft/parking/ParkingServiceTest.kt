@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import kotlin.io.path.Path
 
-
+// TODO прогнать тесты
 class ParkingServiceTest {
 
     private val start = 1_700_000_000_000
