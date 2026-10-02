@@ -1,6 +1,10 @@
 package com.prosoft.parking.concurrent
 
 import com.prosoft.parking.Parking
+import com.prosoft.parking.dsl.parking
+import com.prosoft.parking.model.Car
+import com.prosoft.parking.model.ParkResult
+import com.prosoft.parking.model.SpotType
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.concurrent.thread
 
@@ -33,7 +37,7 @@ private fun atomicBoard() {
             while (true) {
                 val current = free.get()
                 if (current == 0) break
-                if (free.compareAndSet(current, current -1)) break
+                if (free.compareAndSet(current, current - 1)) break
             }
         }
     }
@@ -42,7 +46,42 @@ private fun atomicBoard() {
 
 }
 
-// TODO завершили здесь 25.09
 private fun stormParking(parking: Parking, title: String) {
+    val ok = AtomicInteger()
+    val noSpace = AtomicInteger()
+    val crashed = AtomicInteger()
+
+    val threads = List(DRIVERS) { i ->
+
+        thread {
+            try {
+                when (parking.enter(Car(plateOf(i)), now = 1_700_000_000_000)) {
+                    is ParkResult.Ok -> ok.incrementAndGet()
+                    ParkResult.NoSpace -> noSpace.incrementAndGet()
+                    else -> Unit
+                }
+            } catch (e: Exception) {
+                crashed.incrementAndGet();
+            }
+        }
+    }
+    threads.forEach { it.join() }
+
+    println(
+        "$title въехало=${ok.get()}, отказов=${noSpace.get()}, исключений=${crashed.get()}, "
+                + "сессий в памяти = ${parking.activeSessions().size} " +
+                "(мест всего $SPOTS)"
+    )
 
 }
+
+fun main() {
+    naiveBoard()
+    atomicBoard()
+    repeat(3) {
+        stormParking(parking { level(1) { spots(SPOTS, SpotType.COMPACT) } },
+            "3. Штурм парковки: ")
+    }
+}
+
+

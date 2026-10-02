@@ -8,11 +8,13 @@ import com.prosoft.parking.repo.Repository
 class Parking(private val spots: List<Spot>,
 private val sessions: Repository<Session, String> = InMemoryRepository(), ) {
 
+    private val lock = Any()
+
     private val active = mutableMapOf<String, Session>()
 
     val total: Int get() = spots.size
 
-    fun enter(vehicle: Vehicle, now: Long): ParkResult {
+    fun enter(vehicle: Vehicle, now: Long): ParkResult = synchronized(lock) {
 
         // проверка аргумента
         require(vehicle.plate.isNotBlank()) {
@@ -71,7 +73,7 @@ private val sessions: Repository<Session, String> = InMemoryRepository(), ) {
     }
 
     // Выезд
-    fun exit(plate: String, now: Long): Pair<Session, Int> {
+    fun exit(plate: String, now: Long): Pair<Session, Int> = synchronized(lock) {
                                                // Элвис (есть/null)
         // val session = active.remove(plate) ?: throw SessionNotFoundException(plate)
         val session = sessions.deleteById(plate) ?: throw SessionNotFoundException(plate)
