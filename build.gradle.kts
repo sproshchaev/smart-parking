@@ -1,32 +1,48 @@
 plugins {
-    // kotlin("jvm") version "1.9.23"
     kotlin("jvm") version "2.3.20"
+    kotlin("plugin.spring") version "2.3.20"
+    id("org.springframework.boot") version "4.0.8"
+    id("io.spring.dependency-management") version "1.1.7"
 }
 
 group = "com.prosoft"
 version = "1.0-SNAPSHOT"
+
+// BOM Spring Boot иначе прижмёт kotlin-stdlib и kotlin-reflect к своей версии Kotlin
+extra["kotlin.version"] = "2.3.20"
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    testImplementation(kotlin("test"))
-    testImplementation("org.junit.jupiter:junit-jupiter-api:6.1.3")
-    testImplementation("org.junit.jupiter:junit-jupiter-params:6.1.3")
+    implementation("org.springframework.boot:spring-boot-starter")
+    implementation("org.jetbrains.kotlin:kotlin-reflect")
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
+    testImplementation("org.junit.jupiter:junit-jupiter-params")
     testImplementation("io.mockk:mockk:1.14.11")
-
-//    testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.2")
-//    testImplementation("org.junit.jupiter:junit-jupiter-params:5.10.2")
-//    testImplementation("io.mockk:mockk:1.13.10")
-
-
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
 kotlin {
-    jvmToolchain(21)
+    compilerOptions {
+        freeCompilerArgs.addAll("-Xjsr305=strict", "-Xannotation-default-target=param-property")
+    }
 }
 
-tasks.test {
+// В проекте несколько fun main (Main.kt, RaceDemo.kt) — bootJar должен знать, какой запускать.
+// Когда появится @SpringBootApplication, заменить на "com.prosoft.parking.ParkingApplicationKt"
+springBoot {
+    mainClass = "com.prosoft.parking.MainKt"
+}
+
+tasks.withType<Test> {
     useJUnitPlatform()
 }
