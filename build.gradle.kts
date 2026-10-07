@@ -24,6 +24,7 @@ repositories {
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
+    implementation("org.springframework.shell:spring-shell-starter-jni:4.0.3") // shell
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
     testImplementation("org.junit.jupiter:junit-jupiter-params")
@@ -37,12 +38,14 @@ kotlin {
     }
 }
 
-// В проекте несколько fun main (Main.kt, RaceDemo.kt) — bootJar должен знать, какой запускать.
-// Когда появится @SpringBootApplication, заменить на "com.prosoft.parking.ParkingApplicationKt"
 springBoot {
-    mainClass = "com.prosoft.parking.MainKt"
+    mainClass = "com.prosoft.parking.ParkingApplicationKt"
 }
 
 tasks.withType<Test> {
     useJUnitPlatform()
+}
+
+tasks.named<org.springframework.boot.gradle.tasks.run.BootRun>("bootRun"){
+    standardInput = System.`in`
 }

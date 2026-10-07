@@ -9,9 +9,11 @@ import com.prosoft.parking.model.Truck
 import com.prosoft.parking.storage.SessionLog
 import com.prosoft.parking.tariff.Tariff
 import com.prosoft.parking.tariff.flat
+import org.springframework.stereotype.Service
 
 data class Receipt(val plate: String, val spotId: String, val minutes: Int, val amount: Int)
 
+@Service
 class ParkingService(
     private val parking: Parking,
     private val log: SessionLog,
