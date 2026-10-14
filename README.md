@@ -23,7 +23,7 @@
 
 ## Финал 
 - [V] 16 Spring: консоль (вебинар 20)
-- [ ] 17 Spring: REST и база JPA 
+- [ ] 17 Spring: REST и база JPA (+тесты)
 - [ ] 18 Spring data jdbc 
 
 --- 
