@@ -23,11 +23,37 @@
 
 ## Финал 
 - [V] 16 Spring: консоль (вебинар 20)
-- [ ] 17 Spring: REST и база 
+- [ ] 17 Spring: REST и база JPA 
+- [ ] 18 Spring data jdbc 
 
 --- 
+// Теория (вебинар 20) часть 2
+// 1) @RestController - контроллер возвращает данные 
+//    @RequestMapping - общий префикс пути 
+// 2) @PostMapping, @GetMapping, @DeleteMapping
+//    Тело @RequestBody, 
+//    Параметры строки @RequestParam
+// 3) Jackson превращает объекты в JSON и обратно 
+// 4) DTO - объекты передачи данных, data class 
+// 5) ResponseEntity для передачи кода ответа 
+// 6) @RestControllerAdvice и @ExceptionHandler - исключения всего приложения 
+// 7) JPA: @Entity, @Table, @Id, @GenerateValue над ключом, @Column 
+// 8) Spring Data: интерфейс от JpaRepository<Сущность, ТипКлюча>
+// 9) @SptingBootTest, @AutoConfigureMockMvc  
 
-// Теория (вебинар 20)
+// Лучшие практики, рекомендуется:
+// 1) адаптер под свой интерфес 
+// 2) сущности и доменная модель - разные классы 
+// 3) отдавать наружу только DTO
+// 4) централизованная обработка ошибок @RestControllerAdvice 
+// 5) выбирать предков исключений по смыслу 
+// 6) расширять сигнатуру параметром со значением по умолчанию 
+// 7) держать контроллер переводчиком 
+// 8) тестировать через MockMvc
+// 9) spring.jpa.hibernate.dll-auto=create-drop - только для демо и тестов
+
+
+// Теория (вебинар 20) часть 1
 // 1) Контейнер 
 // 2) @SpringBootApplication на классе - точка входа и автонастройка
 // 3) @Bean над методом конфигурации 
