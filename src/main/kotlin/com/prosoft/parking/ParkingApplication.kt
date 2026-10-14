@@ -3,6 +3,7 @@ package com.prosoft.parking
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.context.annotation.Bean
 import com.prosoft.parking.dsl.parking
+import com.prosoft.parking.jpa.JpaSessionRepository
 import com.prosoft.parking.model.AdjustableClock
 import com.prosoft.parking.model.SpotType
 import com.prosoft.parking.model.SystemClock
@@ -18,7 +19,7 @@ import kotlin.io.path.Path
 class ParkingApplication {
 
     @Bean
-    fun parking(): Parking = parking {
+    fun parking(session: JpaSessionRepository): Parking = parking(session) {
         level(1) {
             spots(2, SpotType.COMPACT)
             spots(1, SpotType.STANDARD)

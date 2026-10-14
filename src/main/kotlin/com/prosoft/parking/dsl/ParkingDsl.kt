@@ -1,8 +1,11 @@
 package com.prosoft.parking.dsl
 
 import com.prosoft.parking.Parking
+import com.prosoft.parking.model.Session
 import com.prosoft.parking.model.Spot
 import com.prosoft.parking.model.SpotType
+import com.prosoft.parking.repo.InMemoryRepository
+import com.prosoft.parking.repo.Repository
 
 @DslMarker
 annotation class ParkingDslMarker
@@ -33,6 +36,11 @@ class ParkingScope {
 
     fun build(): Parking = Parking(all)
 
+    fun build(sessions: Repository<Session, String>): Parking = Parking(all, sessions)
+
 }
 
-fun parking(block: ParkingScope.() -> Unit): Parking = ParkingScope().apply(block).build()
+fun parking(
+    sessions: Repository<Session, String> = InMemoryRepository(),
+    block: ParkingScope.() -> Unit,
+): Parking = ParkingScope().apply(block).build(sessions)

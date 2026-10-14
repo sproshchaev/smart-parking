@@ -3,6 +3,7 @@ plugins {
     kotlin("plugin.spring") version "2.3.20"
     id("org.springframework.boot") version "4.0.8"
     id("io.spring.dependency-management") version "1.1.7"
+    kotlin("plugin.jpa") version "2.3.20"
 }
 
 group = "com.prosoft"
@@ -25,6 +26,11 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.springframework.shell:spring-shell-starter-jni:4.0.3") // shell
+    implementation("org.springframework.boot:spring-boot-starter-webmvc") // до 4-ки был spring-boot-starter-web
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    implementation("tools.jackson.module:jackson-module-kotlin")
+    runtimeOnly("com.h2database:h2")
+    implementation("org.springframework.boot:spring-boot-starter-webmvc-test") // тестирование web-а
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
     testImplementation("org.junit.jupiter:junit-jupiter-params")
